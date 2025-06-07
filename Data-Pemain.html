@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pemain - ABase</title>
+    <link rel="icon" type="image/png" href="aset/Icon.png">
+    <link rel="stylesheet" href="styles/base.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme') || 'default';
+            document.documentElement.setAttribute('data-theme', theme);
+        });
+    </script>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        /* Desain Scrollbar */
+        .container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+            border-radius: 10px;
+        }
+
+        .container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #3178e6, #2567d5);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .title {
+            font-size: 2rem;
+            color: #4a9eff;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .player-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .player-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .player-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .player-school,
+        .player-session,
+        .player-target {
+            flex: 1;
+            text-align: center;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 480px) {
+            .player-details {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .player-school,
+            .player-session,
+            .player-target {
+                height: 35px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .player-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4a9eff;
+            animation: bounce 1s ease infinite;
+        }
+
+        .player-school {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(74, 158, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .player-session {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(74, 158, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .player-target {
+            background: rgba(74, 158, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.5rem;
+            }
+
+            .player-name {
+                font-size: 1.5rem;
+                margin-top: 10px;
+            }
+
+            .player-school,
+            .player-session,
+            .player-target {
+                font-size: 1rem;
+                padding: 6px 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .scores-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .score-input {
+                padding: 10px;
+                font-size: 1rem;
+            }
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a9eff;
+        }
+
+        .scores-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .scores-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .scores-title {
+            font-size: 1.5rem;
+            color: #4a9eff;
+            font-weight: bold;
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .score-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.2rem;
+            color: white;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .score-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 30px auto 0;
+            font-size: 1.2rem;
+        }
+
+        .edit-button {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .edit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+
+            .title {
+                font-size: 1.5rem;
+            }
+
+            .player-info {
+                padding: 15px;
+            }
+
+            .player-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .player-name {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .score-table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-button" onclick="goBack()">
+                ↩️ Kembali
+            </button>
+            <h1 class="title">DATA PEMAIN</h1>
+        </div>
+
+        <div class="player-info">
+            <div class="player-header">
+                <div class="player-name"><!-- Nama pemain akan ditampilkan di sini --></div>
+                <div class="player-details">
+                    <div class="player-school"><!-- Sekolah pemain akan ditampilkan di sini --></div>
+                    <div class="player-session"><!-- Sesi pemain akan ditampilkan di sini --></div>
+                    <div class="player-target"><!-- Target pemain akan ditampilkan di sini --></div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Skor</div>
+                    <div class="stat-value" id="totalScore">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rata-rata</div>
+                    <div class="stat-value" id="averageScore">0.0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Skor Tertinggi</div>
+                    <div class="stat-value" id="highestScore">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Skor Terendah</div>
+                    <div class="stat-value" id="lowestScore">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total X</div>
+                    <div class="stat-value" id="totalX">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Miss</div>
+                    <div class="stat-value" id="totalMiss">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scores-section">
+            <div class="scores-header">
+                <div class="scores-title">Skor Ronde</div>
+                <button class="edit-button" onclick="toggleEditMode()">
+                    ✏️ Edit Skor
+                </button>
+            </div>
+
+            <div class="scores-grid" id="scoresGrid">
+                <!-- Input skor akan ditampilkan di sini -->
+            </div>
+
+            <button class="save-button" onclick="saveScores()">💾 Simpan Perubahan</button>
+        </div>
+    </div>
+
+    <audio id="buttonSound" src="aset/Button effect.mp3" preload="auto"></audio>
+    <audio id="goodShootSound" src="aset/Good Shoot.mp3" preload="auto"></audio>
+    <audio id="missSound" src="aset/Miss.mp3" preload="auto"></audio>
+
+    <script>
+    // Fungsi untuk mendapatkan parameter dari URL
+    function getUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            sessionId: urlParams.get('session'),
+            playerIndex: urlParams.get('player')
+        };
+    }
+
+    // Fungsi untuk menyimpan perubahan
+    function saveScores() {
+        playButtonSound();
+        const { sessionId, playerName } = getUrlParams();
+        const session = getSessionData(sessionId);
+        
+        if (!session) return;
+
+        const playerIndex = session.players.findIndex(p => p.name === playerName);
+        if (playerIndex === -1) return;
+
+        const inputs = document.querySelectorAll('.score-input');
+        session.scores[playerIndex] = Array.from(inputs).map(input => input.value);
+        
+        localStorage.setItem(`archery_session_${sessionId}`, JSON.stringify(session));
+        
+        const buttonSound = document.getElementById('buttonSound');
+        buttonSound.currentTime = 0;
+        buttonSound.play();
+
+        alert('Perubahan berhasil disimpan!');
+    }
+
+    // Inisialisasi saat dokumen dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set save button display none by default
+        document.querySelector('.save-button').style.display = 'none';
+        const { sessionId, playerIndex } = getUrlParams();
+        if (!sessionId || playerIndex === null) {
+            alert('Data tidak lengkap');
+            window.location.href = 'database.html';
+            return;
+        }
+
+        const session = getSessionData(sessionId);
+        if (!session) {
+            alert('Data sesi tidak ditemukan');
+            window.location.href = 'database.html';
+            return;
+        }
+
+        const player = session.players[parseInt(playerIndex)];
+        if (!player) {
+            alert('Data pemain tidak ditemukan');
+            window.location.href = 'database.html';
+            return;
+        }
+
+        const scores = session.scores[parseInt(playerIndex)];
+
+        // Tampilkan informasi pemain
+        document.querySelector('.player-name').textContent = `👤 ${player.name}`;
+        document.querySelector('.player-school').textContent = `🏫 ${player.school || 'Belum ada sekolah'}`;
+        document.querySelector('.player-session').textContent = `📅 Sesi ${session.sessionNumber || 1}`;
+        document.querySelector('.player-target').textContent = `🎯 Target ${player.target}`;
+
+        createScoreInputs(scores);
+        updateStats(scores);
+    });
+
+    // Fungsi untuk mendapatkan data sesi dari localStorage
+    function getSessionData(sessionId) {
+        const sessionData = localStorage.getItem(`archery_session_${sessionId}`);
+        return sessionData ? JSON.parse(sessionData) : null;
+    }
+
+    let editMode = false;
+
+    // Fungsi untuk toggle mode edit
+    function toggleEditMode() {
+        playButtonSound();
+        editMode = !editMode;
+        const inputs = document.querySelectorAll('.score-input');
+        const editButton = document.querySelector('.edit-button');
+        const saveButton = document.querySelector('.save-button');
+
+        inputs.forEach(input => {
+            input.readOnly = !editMode;
+        });
+
+        editButton.textContent = editMode ? '❌ Batal' : '✏️ Edit Skor';
+        editButton.style.background = editMode ? 
+            'linear-gradient(135deg, #FF4444, #FF0000)' : 
+            'linear-gradient(135deg, #FF6B6B, #FF8E8E)';
+        
+        saveButton.style.display = editMode ? 'block' : 'none';
+        
+        const buttonSound = document.getElementById('buttonSound');
+        buttonSound.currentTime = 0;
+        buttonSound.play();
+    }
+
+    // Fungsi untuk menghitung statistik
+    function calculateStats(scores) {
+        const numericScores = scores.map(score => {
+            if (score === 'X') return 10;
+            if (score === 'M') return 0;
+            return parseInt(score) || 0;
+        });
+
+        const total = numericScores.reduce((sum, score) => sum + score, 0);
+        const average = (total / scores.length).toFixed(1);
+        const highest = Math.max(...numericScores);
+        const lowest = Math.min(...numericScores);
+        const totalX = scores.filter(score => score === 'X').length;
+        const totalMiss = scores.filter(score => score === 'M').length;
+
+        return {
+            total,
+            average,
+            highest: highest === 10 ? 'X' : highest.toString(),
+            lowest: lowest === 0 ? 'M' : lowest.toString(),
+            totalX,
+            totalMiss
+        };
+    }
+
+    // Fungsi untuk memperbarui tampilan statistik
+    function updateStats(scores) {
+        const stats = calculateStats(scores);
+        document.getElementById('totalScore').textContent = stats.total;
+        document.getElementById('averageScore').textContent = stats.average;
+        document.getElementById('highestScore').textContent = stats.highest;
+        document.getElementById('lowestScore').textContent = stats.lowest;
+        document.getElementById('totalX').textContent = stats.totalX;
+        document.getElementById('totalMiss').textContent = stats.totalMiss;
+    }
+
+    // Fungsi untuk membuat input skor
+    function createScoreInputs(scores) {
+        const scoresGrid = document.getElementById('scoresGrid');
+        scoresGrid.innerHTML = '';
+
+        scores.forEach((score, index) => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'score-input';
+            input.value = score;
+            input.maxLength = 1;
+            input.dataset.index = index;
+            input.placeholder = `#${index + 1}`;
+            input.readOnly = true; // Default readonly
+
+            input.addEventListener('input', (e) => {
+                let value = e.target.value.toUpperCase();
+                if (value === 'X' || value === 'M' || (value >= 0 && value <= 10)) {
+                    if (value === '10') value = 'X';
+                    e.target.value = value;
+                    if (value === 'X' || (value >= 8 && value <= 10)) {
+                        const goodShootSound = document.getElementById('goodShootSound');
+                        goodShootSound.currentTime = 0;
+                        goodShootSound.play();
+                    } else if (value === 'M' || (value >= 0 && value <= 4)) {
+                        const missSound = document.getElementById('missSound');
+                        missSound.currentTime = 0;
+                        missSound.play();
+                    } else {
+                        const buttonSound = document.getElementById('buttonSound');
+                        buttonSound.currentTime = 0;
+                        buttonSound.play();
+                    }
+                    updateScoresArray();
+                } else {
+                    e.target.value = '';
+                }
+            });
+
+            // Tambahkan efek hover
+            input.addEventListener('mouseover', () => {
+                if (editMode) {
+                    input.style.transform = 'scale(1.05)';
+                }
+            });
+
+            input.addEventListener('mouseout', () => {
+                input.style.transform = 'scale(1)';
+            });
+
+            scoresGrid.appendChild(input);
+        });
+    }
+
+    // Fungsi untuk memperbarui array skor
+    function updateScoresArray() {
+        const inputs = document.querySelectorAll('.score-input');
+        const scores = Array.from(inputs).map(input => input.value);
+        updateStats(scores);
+    }
+
+    // Fungsi untuk kembali ke halaman sebelumnya
+    function goBack() {
+        playButtonSound();
+        const { sessionId } = getUrlParams();
+        window.location.href = `BoxPemain-Base.html?session=${sessionId}`;
+    }
+    </script>
+</body>
+</html>

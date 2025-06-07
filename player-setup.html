@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Setup - ABase</title>
+    <link rel="icon" type="image/png" href="aset/Icon.png">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/player-setup.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme') || 'default';
+            document.documentElement.setAttribute('data-theme', theme);
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hint-popup {
+            position: fixed;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 1000;
+            color: #333;
+            display: none;
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .hint-popup::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .hint-popup.top::before {
+            bottom: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.bottom::before {
+            top: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.active {
+            display: block;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .tutorial-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>    <!-- Layar Loading Global -->
+    <div id="globalLoading" class="layar tersembunyi">
+        <div class="loading-container">
+            <video id="videoLoadingGlobal" muted autoplay playsinline loop>
+                <source src="aset/Loading.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- Layar Setup Pemain -->
+    <div class="setup-screen">
+        <button id="tutorialButton" class="tutorial-button">
+            <i class="fas fa-question-circle"></i> Bantuan
+        </button>
+
+        <div class="hint-popup" id="tutorialHint">
+            <h3 style="margin-bottom: 10px; color: #FF6B6B;">⚙️ Petunjuk Setup Pemain</h3>
+            <p>- Atur jarak tembak dengan mengisi angka<br>- Pilih jumlah pemain (1-4 pemain)<br>- Isi data pemain pada form yang tersedia<br>- Gunakan tombol panah untuk berpindah antar pemain</p>
+        </div>
+
+        <div class="setup-content">
+            <h1>⚙️ Setup Pemain</h1>
+            
+            <!-- Jarak Tembak Section -->
+            <div class="glass-container">
+                <div class="section-icon">🎯</div>
+                <div class="jarak-section">
+                    <label for="jarakTembak">Jarak Tembak</label>
+                    <div class="jarak-input-group">
+                        <input type="number" id="jarakTembak" value="18" min="1">
+                        <span class="unit">meter</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jumlah Pemain Section -->
+            <div class="glass-container">
+                <div class="section-icon">👥</div>
+                <div class="player-count-section">
+                    <label>Jumlah Pemain</label>
+                    <div class="player-count-buttons">
+                        <button class="player-count active" data-count="1">1</button>
+                        <button class="player-count" data-count="2">2</button>
+                        <button class="player-count" data-count="3">3</button>
+                        <button class="player-count" data-count="4">4</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Forms Container -->
+            <div id="playerFormsContainer">
+                <!-- Player forms will be generated here -->
+            </div>
+
+            <!-- Navigation Arrows -->
+            <div class="player-navigation">
+                <button id="prevPlayer" class="nav-arrow hidden">⬅️</button>
+                <button id="nextPlayer" class="nav-arrow hidden">➡️</button>
+            </div>
+        </div>
+
+        <!-- Fixed Bottom Buttons -->        <div class="setup-buttons">
+            <button id="tombolKembali" class="tombol-secondary">
+                <span>↩️</span>
+                <span>Kembali</span>
+            </button>
+            <button id="tombolMulaiCatat" class="tombol-primary">
+                <span>🎯</span>
+                <span>Mulai Pencatatan</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="player-setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database - ABase</title>
+    <link rel="icon" type="image/png" href="aset/Icon.png">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/database.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme') || 'default';
+            document.documentElement.setAttribute('data-theme', theme);
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Modal Ekspor */
+        .export-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .export-modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 16px;
+            min-width: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-modal h2 {
+            color: #4a9eff;
+            margin: 0 0 20px 0;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .export-option span {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .export-buttons button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .export-buttons button:first-child {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .export-buttons button:last-child {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+
+        .export-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4a9eff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .hint-popup {
+            position: fixed;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 1000;
+            color: #333;
+            display: none;
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .hint-popup::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .hint-popup.top::before {
+            bottom: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.bottom::before {
+            top: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.active {
+            display: block;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+    <style>
+        /* Modal Ekspor */
+        .export-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .export-modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 16px;
+            min-width: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-modal h2 {
+            color: #4a9eff;
+            margin: 0 0 20px 0;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .export-option span {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .export-buttons button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .export-buttons button:first-child {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .export-buttons button:last-child {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+
+        .export-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4a9eff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .database-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .database-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .database-title {
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            color: #4a9eff;
+            margin: 0;
+            text-align: center;
+            width: 100%;
+            letter-spacing: 1px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 15px 8px 35px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: clamp(0.8rem, 3.5vw, 0.9rem);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(0.8rem, 3.5vw, 0.9rem);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .session-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 15px 15px 15px 50px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .session-checkbox {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(74, 158, 255, 0.5);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .session-checkbox:checked {
+            background: #4a9eff;
+            border-color: #4a9eff;
+        }
+
+        .session-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .action-buttons {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            gap: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            justify-content: center;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .action-buttons.visible {
+            display: flex;
+        }
+
+        .delete-button, .export-button {
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: clamp(0.8rem, 3.5vw, 0.9rem);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .delete-button {
+            background: linear-gradient(135deg, #ff4a4a, #e63131);
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .delete-button:hover, .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        @media screen and (max-width: 320px) {
+            .database-container {
+                padding: 8px;
+            }
+
+            .database-header {
+                margin-bottom: 10px;
+                gap: 8px;
+            }
+
+            .database-title {
+                font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+            }
+
+            .search-input {
+                padding: 6px 12px 6px 30px;
+                font-size: 0.8rem;
+            }
+
+            .search-icon {
+                left: 10px;
+                font-size: 12px;
+            }
+
+            .back-button {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .action-buttons {
+                padding: 8px;
+                bottom: 10px;
+            }
+
+            .delete-button, .export-button {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                min-width: 80px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="database-container">
+        <div class="database-header">
+            <button id="tutorialButton" class="tutorial-button" style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #FF6B6B, #FF8E8E); padding: 8px 16px; border-radius: 50px; border: none; color: white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);">
+                <i class="fas fa-question-circle"></i> Bantuan
+            </button>
+
+            <div class="hint-popup" id="tutorialHint">
+                <h3 style="margin-bottom: 10px; color: #FF6B6B;">📊 Petunjuk Database</h3>
+                <p>- Klik checkbox untuk memilih sesi yang ingin diekspor atau dihapus<br>- Klik kartu sesi untuk melihat detail score<br>- Gunakan pencarian untuk menemukan sesi tertentu</p>
+            </div>
+            <button class="back-button" onclick="window.location.href='home.html'">
+                ⬅️ Kembali
+            </button>
+            <h1 class="database-title">DATABASE</h1>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Cari berdasarkan nama atau tanggal...">
+            </div>
+        </div>
+
+        <div id="sessionsList"></div>
+
+        <div class="action-buttons">
+            <button class="delete-button" onclick="deleteSelectedSessions()">🗑️ Hapus</button>
+            <button class="export-button" onclick="showExportSettings()">📊 Ekspor</button>
+        </div>
+    </div>
+
+    <audio id="buttonSound" src="aset/Button effect.mp3"></audio>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="database.js"></script>
+    <script>
+        function updateActionButtons() {
+            const selectedCheckboxes = document.querySelectorAll('.session-checkbox:checked');
+            const actionButtons = document.querySelector('.action-buttons');
+            
+            if (selectedCheckboxes.length > 0) {
+                actionButtons.classList.add('visible');
+            } else {
+                actionButtons.classList.remove('visible');
+            }
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('session-checkbox')) {
+                updateActionButtons();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Sheet - ABase</title>
+    <link rel="icon" type="image/png" href="aset/Icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme') || 'default';
+            document.documentElement.setAttribute('data-theme', theme);
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        #tutorialModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            width: 400px;
+            text-align: center;
+            position: relative;
+            color: #333;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #4a9eff;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        #continueButton {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        #continueButton:hover {
+            transform: scale(1.05);
+        }
+
+        .hint-popup::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .hint-popup.top::before {
+            bottom: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.bottom::before {
+            top: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.active {
+            display: block;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+
+    </style>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1f35, #2d3a66);
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
+
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }        
+
+        .header-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 3px;
+        }        
+
+        .date-info-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            width: 100%;
+            padding: 0 5px;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+
+        .date-group {
+            text-align: center;
+            grid-column: 2;
+            margin: 0 5px;
+        }
+
+        .total-display {
+            text-align: right;
+            grid-column: 3;
+            font-size: 0.85rem;
+            padding: 3px 8px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .date-info {
+            font-size: 0.85rem;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+        }        
+
+        .jarak-display {
+            grid-column: 1;
+            font-size: 0.75rem;
+            color: #fff;
+            background: rgba(74, 158, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            line-height: 1.2;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            margin-left: 2px;
+        }
+
+        .player-selector {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 4px 0;
+            margin: 2px 0;
+            width: 100%;
+            max-width: 400px;
+            justify-content: center;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .player-selector::-webkit-scrollbar {
+            display: none;
+        }
+
+        .player-tab {
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 60px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .player-tab.active {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .score-table-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 5px;
+            padding-bottom: 240px;
+            margin-bottom: 0;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            height: calc(100vh - 80px);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(74, 158, 255, 0.8) rgba(255, 255, 255, 0.1);
+        }
+
+        .score-table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .score-table-container::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.05),
+                rgba(74, 158, 255, 0.1)
+            );
+            border-radius: 10px;
+            margin: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score-table-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, 
+                rgba(74, 158, 255, 0.9),
+                rgba(49, 120, 230, 0.9)
+            );
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2),
+                        0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .score-table-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, 
+                rgba(74, 158, 255, 1),
+                rgba(49, 120, 230, 1)
+            );
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3),
+                        0 0 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .score-table-container::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(135deg, 
+                rgba(49, 120, 230, 1),
+                rgba(40, 104, 214, 1)
+            );
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+        }
+
+        .score-table th, .score-table td {
+            padding: 6px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+        }
+
+        .score-table th {
+            background: rgba(74, 158, 255, 0.3);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .score-input {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, 
+                rgba(26, 31, 53, 0.95), 
+                rgba(45, 58, 102, 0.98)
+            );
+            padding: 12px 8px;
+            backdrop-filter: blur(12px);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            border-top: 1px solid;
+            border-image: linear-gradient(
+                90deg,
+                rgba(74, 158, 255, 0.3),
+                rgba(255, 255, 255, 0.2),
+                rgba(74, 158, 255, 0.3)
+            ) 1;
+        }
+
+        .score-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            max-width: 240px;
+            margin: 0 auto 10px auto;
+            padding: 2px;
+            position: relative;
+        }
+
+        .score-button {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.2) 0%,
+                rgba(255, 255, 255, 0.1) 20%,
+                rgba(0, 0, 0, 0.1) 100%
+            );
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+                        inset 0 -1px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.1) 50%,
+                transparent 100%
+            );
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .score-button:hover::before {
+            opacity: 1;
+            transform: rotate(45deg) translate(0%, -10%);
+        }
+
+        .score-button.gold {
+            background-color: #ffd700;
+            background-image: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.3) 0%,
+                rgba(255, 215, 0, 0.5) 50%,
+                rgba(218, 165, 32, 0.9) 100%
+            );
+        }
+
+        .score-button.red {
+            background-color: #ff4d4d;
+            background-image: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.3) 0%,
+                rgba(255, 77, 77, 0.5) 50%,
+                rgba(204, 0, 0, 0.9) 100%
+            );
+        }
+
+        .score-button.blue {
+            background-color: #4a9eff;
+            background-image: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.3) 0%,
+                rgba(74, 158, 255, 0.5) 50%,
+                rgba(49, 120, 230, 0.9) 100%
+            );
+        }
+
+        .score-button.black {
+            background-color: #444;
+            background-image: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.2) 0%,
+                rgba(100, 100, 100, 0.5) 50%,
+                rgba(50, 50, 50, 0.9) 100%
+            );
+        }
+
+        .score-button:hover {
+            transform: translateY(-1px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .score-button:active {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+                        inset 0 -1px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 8px;
+            max-width: 240px;
+            margin: 0 auto;
+        }
+
+        .control-button {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .control-button.finish {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+        }
+
+        .control-button.delete {
+            background: linear-gradient(135deg, rgba(255, 69, 58, 0.8), rgba(255, 69, 58, 0.9));
+        }
+
+        .control-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .control-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .score-cell {
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .footer-credit {
+            text-align: center;
+            padding: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            font-style: italic;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, 
+                rgba(74, 158, 255, 0.1), 
+                rgba(49, 120, 230, 0.2)
+            );
+            border-radius: 20px;
+            margin: 10px 5px 160px 5px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .footer-credit::before {
+            content: '❤️';
+            margin-right: 5px;
+            font-style: normal;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+
+        /* Popup Styles */
+        .completion-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .popup-content {
+            background: linear-gradient(135deg, #2a3f5f, #1a2a43);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .popup-content h2 {
+            color: #4a9eff;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            animation: bounce 1s ease infinite;
+        }
+
+        .popup-content p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .popup-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .rerecord-button {
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+        }
+
+        .home-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .popup-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @media screen and (max-width: 320px) {
+            .score-table-container::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .footer-credit {
+                font-size: 0.7rem;
+                padding: 8px;
+                margin: 8px 4px 140px 4px;
+            }
+
+            .control-button {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media screen and (max-height: 600px) {
+            .score-table-container {
+                padding-bottom: 160px;
+            }
+            .score-input {
+                padding: 8px 6px;
+            }
+            .score-buttons-grid {
+                gap: 3px;
+            }
+            .score-button {
+                font-size: 0.9rem;
+            }
+            .footer-credit {
+                margin-bottom: 120px;
+            }
+            .control-buttons {
+                padding: 0 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Layar Loading Global -->
+    <div id="globalLoading" class="layar tersembunyi">
+        <div class="loading-container">
+            <video id="videoLoadingGlobal" muted autoplay playsinline loop>
+                <source src="aset/Loading.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <div class="score-container">
+            <div class="tutorial-modal" id="tutorialModal">
+        <div class="tutorial-content">
+            <h2 style="color: #4a9eff; margin-bottom: 20px;">🎯 Selamat Datang di Score Sheet!</h2>
+            <p style="margin-bottom: 15px;">Berikut adalah petunjuk penggunaan Score Sheet:</p>
+            <ul style="text-align: left; margin-bottom: 20px;">
+                <li>Gunakan tombol angka untuk memasukkan skor</li>
+                <li>X = 10 poin (tembakan sempurna)</li>
+                <li>M = 0 poin (miss)</li>
+                <li>Skor akan otomatis dijumlahkan</li>
+                <li>Gunakan tab pemain untuk beralih antar pemain</li>
+                <li>Total skor akan diperbarui secara otomatis</li>
+            </ul>
+            <button id="continueButton" class="continue-btn">Lanjutkan ➜</button>
+        </div>
+    </div>
+
+            <!-- Header Section -->        <div class="header-info">            <div class="date-info-container">
+                <div id="jarakTembak" class="jarak-display">
+                    🎯 Jarak: <span id="jarakValue">18</span> meter
+                </div>
+                <div class="date-group">
+                    <h2 class="date-info" id="currentDate">6/2/2025</h2>
+                    <p class="date-info" id="currentDay">Senin</p>
+                </div>
+                <div class="total-display">
+                    🏆 Total: <span id="grandTotal">0</span>
+                </div>
+            </div>
+            <!-- Player Selector -->
+            <div id="playerSelector" class="player-selector" data-count="1">
+                <!-- Player tabs will be generated here -->
+            </div>
+        </div>
+
+        <!-- Scrollable Score Table -->
+        <div class="score-table-container">
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th>🎯</th>
+                        <th>1️⃣</th>
+                        <th>2️⃣</th>
+                        <th>3️⃣</th>
+                        <th>💯</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreTableBody">
+                    <!-- Score rows will be generated here -->
+                </tbody>
+            </table>
+            <div class="footer-credit">Made in Home • Rwan</div>
+        </div>        <!-- Fixed Bottom Score Input -->
+        <div class="score-input">
+            <div class="score-buttons-grid">
+                <button class="score-button gold" data-value="X">X</button>
+                <button class="score-button gold" data-value="10">10</button>
+                <button class="score-button gold" data-value="9">9</button>
+                <button class="score-button red" data-value="8">8</button>
+                <button class="score-button red" data-value="7">7</button>
+                <button class="score-button blue" data-value="6">6</button>
+                <button class="score-button blue" data-value="5">5</button>
+                <button class="score-button blue" data-value="4">4</button>
+                <button class="score-button blue" data-value="3">3</button>
+                <button class="score-button black" data-value="2">2</button>
+                <button class="score-button black" data-value="1">1</button>
+                <button class="score-button black" data-value="M">M</button>
+            </div>
+
+            <div class="control-buttons">
+                <button id="deleteButton" class="control-button delete">
+                    ⌫ Hapus
+                </button>
+                <button id="finishButton" class="control-button finish">
+                    ✓ Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="tutorialModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Selamat Datang di Score Sheet!</h2>
+            <p class="modal-text">
+                Berikut adalah petunjuk penggunaan Score Sheet:<br>
+                - Gunakan tombol angka untuk memasukkan skor<br>
+                - X = 10 poin (tembakan sempurna)<br>
+                - M = 0 poin (miss)<br>
+                - Skor akan otomatis dijumlahkan<br>
+                - Gunakan tab pemain untuk beralih antar pemain<br>
+                - Total skor akan diperbarui secara otomatis
+            </p>
+            <button id="continueButton">Lanjutkan</button>
+        </div>
+    </div>
+
+    <audio id="buttonSound" src="aset/Button effect.mp3" preload="auto"></audio>
+    <audio id="goodShootSound" src="aset/Good Shoot.mp3" preload="auto"></audio>
+    <audio id="missSound" src="aset/Miss.mp3" preload="auto"></audio>
+
+    <script src="score-sheet.js"></script>
+</body>
+</html>
