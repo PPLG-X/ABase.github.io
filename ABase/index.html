@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Archery Score</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B1B1B">
+    <link rel="stylesheet" href="style.css">
+    <script src="register-sw.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1B1B1B;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay video {
+            width: 90%;
+            height: 90%;
+            max-width: 1200px;
+            max-height: 800px;
+            object-fit: contain;
+        }
+
+        .intro-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1B1B1B;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        #videoIntro {
+            width: 90%;
+            height: 90%;
+            max-width: 1200px;
+            max-height: 800px;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-overlay:hover {
+            background: rgba(0, 0, 0, 0.7);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .play-overlay::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 20px 0 20px 35px;
+            border-color: transparent transparent transparent #ffffff;
+            margin-left: 8px;
+        }
+
+        .start-button {
+            position: absolute;
+            bottom: 50px;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #4a9eff, #3178e6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+            z-index: 10;
+            opacity: 0;
+            animation: floating 2s infinite;
+            transform: translateY(20px);
+        }
+
+        .start-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .start-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+            background: linear-gradient(135deg, #3178e6, #4a9eff);
+        }
+
+        .start-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(74, 158, 255, 0.3);
+        }
+
+        @keyframes floating {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .video-error {
+            color: white;
+            text-align: center;
+            padding: 20px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+
+        .tutorial-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            animation: bounce 1s infinite;
+        }
+
+        .tutorial-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            animation: none;
+        }
+
+        .tutorial-button i {
+            font-size: 1.2rem;
+        }
+
+        .hint-popup {
+            position: fixed;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 1000;
+            color: #333;
+            display: none;
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .hint-popup::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .hint-popup.top::before {
+            bottom: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.bottom::before {
+            top: -10px;
+            left: 50%;
+            margin-left: -10px;
+        }
+
+        .hint-popup.active {
+            display: block;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="intro-container">
+        <video id="videoIntro" playsinline>
+            <source src="aset/intro.mp4" type="video/mp4">
+        </video>
+        <div class="play-overlay"></div>
+        <div class="video-error">
+            <h2>Unable to play the intro video</h2>
+            <p>Click the button below to continue</p>
+        </div>
+        <button class="start-button">Enter ABase 🎯</button>
+    </div>
+
+
+
+    <audio id="buttonSound" src="aset/Button effect.mp3" preload="auto"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('videoIntro');
+            const button = document.querySelector('.start-button');
+            const errorMessage = document.querySelector('.video-error');
+            const buttonSound = document.getElementById('buttonSound');
+            const playOverlay = document.querySelector('.play-overlay');
+            const container = document.querySelector('.intro-container');
+
+            // Initially hide the button
+            button.style.display = 'none';
+
+            // Function to start video
+            function startVideo() {
+                playOverlay.style.display = 'none';
+                video.play().catch(function(error) {
+                    console.log("Video playback failed:", error);
+                    errorMessage.style.display = 'block';
+                    showButton();
+                });
+            }
+
+            // Add click event listeners to start video
+            playOverlay.addEventListener('click', startVideo);
+            container.addEventListener('click', startVideo);
+
+            // Show button when video ends
+            video.addEventListener('ended', showButton);
+
+            // Handle video errors
+            video.addEventListener('error', function() {
+                errorMessage.style.display = 'block';
+                showButton();
+            });
+
+            function showButton() {
+                button.style.display = 'block';
+                // Small delay to allow CSS transition to work
+                setTimeout(() => {
+                    button.classList.add('visible');
+                }, 100);
+            }
+
+            // Add click sound effect to button
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent any default behavior
+                buttonSound.play().catch(console.error);
+                // Small delay to allow sound to play before navigating
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 300); // Increased delay for better sound playing
+            });
+
+            // Preload the button sound
+            buttonSound.load();
+
+            // Tutorial button functionality
+            const tutorialButton = document.getElementById('tutorialButton');
+            const tutorialHint = document.getElementById('tutorialHint');
+            let youtubeLink = '#'; // Ganti dengan link YouTube yang sesuai
+
+            // Show hint popup on hover
+            tutorialButton.addEventListener('mouseenter', () => {
+                tutorialHint.style.display = 'block';
+                tutorialHint.style.top = (tutorialButton.offsetTop + tutorialButton.offsetHeight + 10) + 'px';
+                tutorialHint.style.right = '20px';
+                tutorialHint.classList.add('active');
+            });
+
+            tutorialButton.addEventListener('mouseleave', () => {
+                tutorialHint.classList.remove('active');
+                setTimeout(() => {
+                    if (!tutorialHint.classList.contains('active')) {
+                        tutorialHint.style.display = 'none';
+                    }
+                }, 500);
+            });
+
+            // Open YouTube tutorial
+            tutorialButton.addEventListener('click', () => {
+                buttonSound.play();
+                window.open(youtubeLink, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABase - Settings</title>
+    <link rel="icon" type="image/png" href="aset/Icon.png">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        .settings-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .settings-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .settings-container::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .settings-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .settings-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-section h3 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 1.2em;
+        }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .theme-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .theme-btn.active {
+            background: #4a9eff;
+            color: white;
+        }
+
+        .font-size-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            color: white;
+        }
+
+        .font-size-control button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sound-settings, .animation-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            color: white;
+        }
+
+        .switch-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4a9eff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-control input[type="range"] {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 8px;
+            -webkit-appearance: none;
+        }
+
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .language-select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .save-btn, .back-btn, .reset-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .save-btn {
+            background: #4a9eff;
+            color: white;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .save-btn:hover, .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .hint-popup {
+            position: fixed;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 1000;
+            color: #333;
+            display: none;
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Layar Loading Global -->
+    <div id="globalLoading" class="layar tersembunyi">
+        <div class="loading-container">
+            <video id="videoLoadingGlobal" muted autoplay playsinline loop>
+                <source src="aset/Loading.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- Layar Utama -->
+    <div id="layarUtama" class="layar">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h1>⚙️ Pengaturan</h1>
+            </div>
+            
+            <div class="settings-section">
+                <h3>🎨 Tema</h3>
+                <div class="theme-options">
+                <button class="theme-btn active" data-theme="default">🌟 Default</button>
+                <button class="theme-btn" data-theme="dark">🌙 Dark</button>
+                <button class="theme-btn" data-theme="light">☀️ Light</button>
+                <button class="theme-btn" data-theme="colorful">🌈 Colorful</button>
+                <button class="theme-btn" data-theme="professional">💼 Professional</button>
+                <button class="theme-btn" data-theme="forest">🌲 Forest</button>
+            </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>📏 Ukuran Font</h3>
+                <div class="font-size-control">
+                    <button id="decreaseFontBtn">🔍-</button>
+                    <span id="currentFontSize">100%</span>
+                    <button id="increaseFontBtn">🔍+</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>🎵 Suara</h3>
+                <div class="sound-settings">
+                    <label class="switch-container">
+                        <span>Efek Suara</span>
+                        <label class="switch">
+                            <input type="checkbox" id="soundEffects" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </label>
+                    <div class="volume-control">
+                        <span>Volume: </span>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="100">
+                        <span id="volumeValue">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>🎯 Animasi</h3>
+                <div class="animation-settings">
+                    <label class="switch-container">
+                        <span>Animasi UI</span>
+                        <label class="switch">
+                            <input type="checkbox" id="uiAnimations" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>🌐 Bahasa</h3>
+                <select id="languageSelect" class="language-select">
+                    <option value="id">🇮🇩 Bahasa Indonesia</option>
+                    <option value="en">🇬🇧 English</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button id="saveSettings" class="save-btn">💾 Simpan</button>
+                <button id="resetSettings" class="reset-btn">🔄 Reset ke Default</button>
+                <button id="backButton" class="back-btn">🔙 Kembali</button>
+            </div>
+        </div>
+
+        <div class="hint-popup" id="settingsHint">
+            <h3 style="margin-bottom: 10px; color: #FF6B6B;">⚙️ Petunjuk Pengaturan</h3>
+            <p>- Pilih tema untuk mengubah tampilan aplikasi<br>
+               - Atur ukuran font sesuai kenyamanan<br>
+               - Sesuaikan volume dan efek suara<br>
+               - Aktifkan/nonaktifkan animasi UI<br>
+               - Pilih bahasa yang diinginkan</p>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
